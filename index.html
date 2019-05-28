@@ -1,0 +1,368 @@
+<html>
+
+<head>
+    <title>Synthetic Music</title>
+    <!-- <link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css'> -->
+    <style type="text/css">
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #f6f6f6;
+        font-family: sans-serif;
+    }
+
+    .play {
+        width: fit-content;
+        margin: 0 auto;
+        padding: 12px;
+        border: 2px solid #323232;
+        border-radius: 50%;
+    }
+
+    .play div {
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+        border-left: 20px solid #323232;
+        height: 0px;
+        width: fit-content;
+        margin: 0 auto;
+    }
+
+    .heading {
+        text-align: center;
+        margin-top: 5rem;
+    }
+
+    #pattern-container {
+        margin-top: 2rem;
+        width: fit-content;
+        border-radius: 5px;
+        margin: 0 auto;
+    }
+
+    .pattern-group {
+        display: inline-block;
+        background-color: #e4f9f5;
+        padding: 5px 6px;
+    }
+
+    .pattern-group.seed {
+        background-color: #a8e6cf;
+    }
+
+    .pattern.active {
+        background-color: #11999e;
+    }
+
+    .pattern {
+        height: 10px;
+        width: 5px;
+        display: block;
+        margin: 5px 0;
+        padding: 3px;
+        border-radius: 4px;
+        color: transparent;
+        background-color: #cbf1f5;
+    }
+
+
+    /* ------ */
+    a {
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .footnote {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        font-size: 20px;
+        font-weight: 700;
+        z-index: 1000;
+    }
+
+    .details-title {
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .details-title strong {
+        font-weight: bolder;
+    }
+
+    .details-subtitle {
+        margin-top: .5rem !important;
+        margin-bottom: .5rem !important;
+        font-weight: 500;
+        font-size: 1rem;
+        color: #6c757d !important;
+    }
+
+    .footnote .details-body {
+        background-color: #fff;
+        background-clip: border-box;
+        border: 1px solid rgba(0, 0, 0, .125);
+        border-radius: .25rem;
+        padding: 1.25rem;
+    }
+
+    .footnote .info-container .details {
+        position: fixed;
+        bottom: 20px;
+    }
+
+    .footnote .info-container .details {
+        display: none;
+    }
+
+    .footnote .info-container:hover .details {
+        display: block;
+    }
+
+    .footnote .info-container .details:hover {
+        display: block;
+    }
+
+    .animate-fadeIn {
+        animation: fadein 0.7s;
+    }
+
+    @keyframes fadein {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+    </style>
+</head>
+
+<body>
+    <h2 class="heading">Synthetic Music with Neural Networks </h2>
+    <div class="play" onclick="createAndPlayPattern(this)">
+        <div></div>
+    </div>
+    <div>
+        <div id='pattern-container'> </div>
+    </div>
+    <div class="footnote">
+        <span class="info-container">
+            <div class="details animate-fadeIn" style="max-width: 350px;">
+                <div class="details-body">
+                    <h5 class="details-title">Demo for <strong>Getting Started with RxJS by Building a Search Bar</strong></h5>
+                    <h6 class="details-subtitle mb-2 text-muted">Designed and developed by <a href="https://mayankraj.com">Mayank
+                            Raj</a> for <a href="https://www.digitalocean.com/community">DO Community</a></h6>
+                    <a href="#" class="details-link"><small>Go to Tutorial</small></a>
+                </div>
+            </div>
+            ⓘ
+        </span>
+    </div>
+    <script src='https://code.jquery.com/jquery-3.3.1.slim.min.js'></script>
+    <script type='text/javascript' src='https://cdn.jsdelivr.net/npm/lodash@4.17.5/lodash.min.js'></script>
+    <script type='text/javascript' src='https://gogul09.github.io/js/tone.js'></script>
+    <script type='text/javascript' src='https://cdn.jsdelivr.net/npm/@magenta/music@0.0.8/dist/magentamusic.min.js'></script>
+    <script>
+    let rnn = new mm.MusicRNN('https://storage.googleapis.com/download.magenta.tensorflow.org/tfjs_checkpoints/music_rnn/drum_kit_rnn');
+    rnn.initialize();
+
+    // DRUM_CLASSES: 'Kick', 'Snare', 'Hi-hat closed', 'Hi-hat open', 'Tom low', 'Tom mid', 'Tom high', 'Clap', 'Rim'
+
+    let midiDrums = [36, 38, 42, 46, 41, 43, 45, 49, 51];
+    let reverseMidiMapping = new Map([
+        [36, 0],
+        [35, 0],
+        [38, 1],
+        [27, 1],
+        [28, 1],
+        [31, 1],
+        [32, 1],
+        [33, 1],
+        [34, 1],
+        [37, 1],
+        [39, 1],
+        [40, 1],
+        [56, 1],
+        [65, 1],
+        [66, 1],
+        [75, 1],
+        [85, 1],
+        [42, 2],
+        [44, 2],
+        [54, 2],
+        [68, 2],
+        [69, 2],
+        [70, 2],
+        [71, 2],
+        [73, 2],
+        [78, 2],
+        [80, 2],
+        [46, 3],
+        [67, 3],
+        [72, 3],
+        [74, 3],
+        [79, 3],
+        [81, 3],
+        [45, 4],
+        [29, 4],
+        [41, 4],
+        [61, 4],
+        [64, 4],
+        [84, 4],
+        [48, 5],
+        [47, 5],
+        [60, 5],
+        [63, 5],
+        [77, 5],
+        [86, 5],
+        [87, 5],
+        [50, 6],
+        [30, 6],
+        [43, 6],
+        [62, 6],
+        [76, 6],
+        [83, 6],
+        [49, 7],
+        [55, 7],
+        [57, 7],
+        [58, 7],
+        [51, 8],
+        [52, 8],
+        [53, 8],
+        [59, 8],
+        [82, 8]
+    ]);
+
+    let temperature = 1.0;
+
+    var seedPattern = [
+        [0, 2],
+        [0],
+        [2, 5, 8],
+        [],
+        [2, 5, 8],
+        [],
+        [0, 2, 5, 8],
+        [4, 5, 8],
+        [],
+        [0, 5, 8]
+    ];
+
+    const patternLength = 32;
+
+    let reverb = new Tone.Convolver(
+        `assets/small-drum-room.wav`
+    ).toMaster();
+    reverb.wet.value = 0.35;
+
+    let snarePanner = new Tone.Panner().connect(reverb);
+    new Tone.LFO(0.13, -0.25, 0.25).connect(snarePanner.pan).start();
+
+    let drumKit = [
+        new Tone.Player(`assets/808-kick-vh.mp3`).toMaster(),
+        new Tone.Player(`assets/flares-snare-vh.mp3`).connect(snarePanner),
+        new Tone.Player(`assets/808-hihat-vh.mp3`).connect(new Tone.Panner(-0.5).connect(reverb)),
+        new Tone.Player(`assets/808-hihat-open-vh.mp3`).connect(new Tone.Panner(-0.5).connect(reverb)),
+        new Tone.Player(`assets/slamdam-tom-low-vh.mp3`).connect(new Tone.Panner(-0.4).connect(reverb)),
+        new Tone.Player(`assets/slamdam-tom-mid-vh.mp3`).connect(reverb),
+        new Tone.Player(`assets/slamdam-tom-high-vh.mp3`).connect(new Tone.Panner(0.4).connect(reverb)),
+        new Tone.Player(`assets/909-clap-vh.mp3`).connect(new Tone.Panner(0.5).connect(reverb)),
+        new Tone.Player(`assets/909-rim-vh.wav`).connect(new Tone.Panner(0.5).connect(reverb))
+    ];
+
+    // ==================
+    function toNoteSequence(pattern) {
+        return mm.sequences.quantizeNoteSequence({
+                ticksPerQuarter: 220,
+                totalTime: pattern.length / 2,
+                timeSignatures: [{
+                    time: 0,
+                    numerator: 4,
+                    denominator: 4
+                }],
+                tempos: [{
+                    time: 0,
+                    qpm: 120
+                }],
+                notes: _.flatMap(pattern, (step, index) =>
+                    step.map(d => ({
+                        pitch: midiDrums[d],
+                        startTime: index * 0.5,
+                        endTime: (index + 1) * 0.5
+                    }))
+                )
+            },
+            1
+        );
+    }
+
+    function fromNoteSequence(seq, patternLength) {
+        let res = _.times(patternLength, () => []);
+        for (let { pitch, quantizedStartStep } of seq.notes) {
+            res[quantizedStartStep].push(reverseMidiMapping.get(pitch));
+        }
+        return res;
+    }
+
+    function playPattern(pattern) {
+        sequence = new Tone.Sequence(
+            (time, { drums, stepIdx }) => {
+                drums.forEach(d => {
+                    drumKit[d].start(time)
+                });
+            },
+            pattern.map((drums, stepIdx) => ({ drums, stepIdx })),
+            '16n'
+        );
+
+        Tone.context.resume();
+        Tone.Transport.start();
+        sequence.start();
+    }
+
+    function displayPattern(patterns) {
+        window.patterns = patterns;
+
+        const seedPatternLen = seedPattern.length;
+
+        for (let patternIndex = 0; patternIndex < patterns.length; patternIndex++) {
+            let pattern = patterns[patternIndex]
+
+            patternBtnGroup = $('<div></div>').addClass('pattern-group');
+
+            if (patternIndex <= seedPatternLen) {
+                patternBtnGroup.addClass('seed')
+            }
+
+            // patternBtnGroup.append($('<span></span>').text('Seq id:' + patternIndex))
+            for (let i = 0; i <= 8; i++) {
+                if (pattern.includes(i)) {
+                    patternBtnGroup.append($(`<span></span>`).addClass('pattern active'))
+                } else {
+                    patternBtnGroup.append($(`<span></span>`).addClass('pattern'))
+                }
+            }
+            $('#pattern-container').append(patternBtnGroup)
+        }
+
+        return patterns;
+    }
+
+
+    function createAndPlayPattern(e) {
+        $(e).remove()
+        let seedSeq = toNoteSequence(seedPattern);
+        rnn
+            .continueSequence(seedSeq, patternLength, temperature)
+            .then(r => seedPattern.concat(fromNoteSequence(r, patternLength)))
+            .then(displayPattern)
+            .then(playPattern)
+    }
+    </script>
+</body>
+
+</html>
