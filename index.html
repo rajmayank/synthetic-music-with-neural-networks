@@ -167,13 +167,12 @@
     <script type='text/javascript' src='https://gogul09.github.io/js/tone.js'></script>
     <script type='text/javascript' src='https://cdn.jsdelivr.net/npm/@magenta/music@0.0.8/dist/magentamusic.min.js'></script>
     <script>
-    let rnn = new mm.MusicRNN('https://storage.googleapis.com/download.magenta.tensorflow.org/tfjs_checkpoints/music_rnn/drum_kit_rnn');
-    rnn.initialize();
+    let drumRnn = new mm.MusicRNN('https://storage.googleapis.com/download.magenta.tensorflow.org/tfjs_checkpoints/music_rnn/drum_kit_rnn');
+    drumRnn.initialize();
 
-    // DRUM_CLASSES: 'Kick', 'Snare', 'Hi-hat closed', 'Hi-hat open', 'Tom low', 'Tom mid', 'Tom high', 'Clap', 'Rim'
 
-    let midiDrums = [36, 38, 42, 46, 41, 43, 45, 49, 51];
-    let reverseMidiMapping = new Map([
+    const midiDrums = [36, 38, 42, 46, 41, 43, 45, 49, 51];
+    const reverseMidiMapping = new Map([
         [36, 0],
         [35, 0],
         [38, 1],
@@ -237,7 +236,8 @@
         [82, 8]
     ]);
 
-    let temperature = 1.0;
+    const temperature = 1.0;
+    const patternLength = 32;
 
     var seedPattern = [
         [0, 2],
@@ -252,19 +252,15 @@
         [0, 5, 8]
     ];
 
-    const patternLength = 32;
 
-    let reverb = new Tone.Convolver(
-        `assets/small-drum-room.wav`
-    ).toMaster();
-    reverb.wet.value = 0.35;
+    let reverb = new Tone.Convolver(`assets/small-drum-room.wav`).toMaster();
+    reverb.wet.value = 0.3;
 
-    let snarePanner = new Tone.Panner().connect(reverb);
-    new Tone.LFO(0.13, -0.25, 0.25).connect(snarePanner.pan).start();
+    // DRUM_CLASSES: 'Kick', 'Snare', 'Hi-hat closed', 'Hi-hat open', 'Tom low', 'Tom mid', 'Tom high', 'Clap', 'Rim'
 
     let drumKit = [
         new Tone.Player(`assets/808-kick-vh.mp3`).toMaster(),
-        new Tone.Player(`assets/flares-snare-vh.mp3`).connect(snarePanner),
+        new Tone.Player(`assets/flares-snare-vh.mp3`).toMaster(),
         new Tone.Player(`assets/808-hihat-vh.mp3`).connect(new Tone.Panner(-0.5).connect(reverb)),
         new Tone.Player(`assets/808-hihat-open-vh.mp3`).connect(new Tone.Panner(-0.5).connect(reverb)),
         new Tone.Player(`assets/slamdam-tom-low-vh.mp3`).connect(new Tone.Panner(-0.4).connect(reverb)),
@@ -298,7 +294,7 @@
             },
             1
         );
-    }
+    };
 
     function fromNoteSequence(seq, patternLength) {
         let res = _.times(patternLength, () => []);
@@ -310,12 +306,12 @@
 
     function playPattern(pattern) {
         sequence = new Tone.Sequence(
-            (time, { drums, stepIdx }) => {
+            (time, {drums, index}) => {
                 drums.forEach(d => {
                     drumKit[d].start(time)
                 });
             },
-            pattern.map((drums, stepIdx) => ({ drums, stepIdx })),
+            pattern.map((drums, index) => ({ drums, index })),
             '16n'
         );
 
@@ -325,38 +321,28 @@
     }
 
     function displayPattern(patterns) {
-        window.patterns = patterns;
-
-        const seedPatternLen = seedPattern.length;
-
         for (let patternIndex = 0; patternIndex < patterns.length; patternIndex++) {
-            let pattern = patterns[patternIndex]
-
+            let pattern = patterns[patternIndex];
             patternBtnGroup = $('<div></div>').addClass('pattern-group');
+            if (patternIndex <= seedPattern.length)
+                patternBtnGroup.addClass('seed');
 
-            if (patternIndex <= seedPatternLen) {
-                patternBtnGroup.addClass('seed')
-            }
-
-            // patternBtnGroup.append($('<span></span>').text('Seq id:' + patternIndex))
             for (let i = 0; i <= 8; i++) {
-                if (pattern.includes(i)) {
-                    patternBtnGroup.append($(`<span></span>`).addClass('pattern active'))
-                } else {
-                    patternBtnGroup.append($(`<span></span>`).addClass('pattern'))
-                }
+                if (pattern.includes(i))
+                    patternBtnGroup.append($(`<span></span>`).addClass('pattern active'));
+                else
+                    patternBtnGroup.append($(`<span></span>`).addClass('pattern'));
             }
             $('#pattern-container').append(patternBtnGroup)
         }
-
         return patterns;
     }
-
+    
 
     function createAndPlayPattern(e) {
         $(e).remove()
         let seedSeq = toNoteSequence(seedPattern);
-        rnn
+        drumRnn
             .continueSequence(seedSeq, patternLength, temperature)
             .then(r => seedPattern.concat(fromNoteSequence(r, patternLength)))
             .then(displayPattern)
