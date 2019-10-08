@@ -324,7 +324,7 @@
         for (let patternIndex = 0; patternIndex < patterns.length; patternIndex++) {
             let pattern = patterns[patternIndex];
             patternBtnGroup = $('<div></div>').addClass('pattern-group');
-            if (patternIndex <= seedPattern.length)
+            if (patternIndex < seedPattern.length)
                 patternBtnGroup.addClass('seed');
 
             for (let i = 0; i <= 8; i++) {
